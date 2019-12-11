@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.example.booklapangan.apihelper.BaseApiService;
 import com.example.booklapangan.apihelper.UtilsApi;
+import com.example.booklapangan.ui.notifications.NotificationsFragment;
 import com.facebook.stetho.Stetho;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -39,10 +40,10 @@ import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity{
 
-    private EditText name;
+    private EditText email;
     private EditText password;
     private Button login;
-    private Button register;
+    private TextView register;
     int RC_SIGN_IN = 0;
 
     SignInButton signInButton;
@@ -56,6 +57,11 @@ public class LoginActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        try
+        {
+            this.getSupportActionBar().hide();
+        }
+        catch (NullPointerException e){}
         setContentView(R.layout.activity_login);
 
         Stetho.initializeWithDefaults(this);
@@ -65,10 +71,10 @@ public class LoginActivity extends AppCompatActivity{
 
         setTitle("Login");
 
-        name = findViewById(R.id.LoginName);
-        password = findViewById(R.id.LoginPassword);
-        login = findViewById(R.id.loginBt);
-        register = findViewById(R.id.registerBt);
+        email = findViewById(R.id.et_log_Email);
+        password = findViewById(R.id.et_log_Pass);
+        login = findViewById(R.id.bt_Login);
+        register = findViewById(R.id.to_Regis);
         signInButton = findViewById(R.id.sign_in_button);
 
         mContext = this;
@@ -154,7 +160,7 @@ public class LoginActivity extends AppCompatActivity{
     }
 
     public void requestLogin(){
-        mApiService.loginRequest(name.getText().toString(), password.getText().toString())
+        mApiService.loginRequest(email.getText().toString(), password.getText().toString())
                 .enqueue(new Callback<ResponseBody>(){
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -163,6 +169,19 @@ public class LoginActivity extends AppCompatActivity{
                             try {
                                 JSONObject jsonRESULTS = new JSONObject(response.body().string());
                                 if (jsonRESULTS.getString("status").equals("true")) {
+
+                                    String id_user = jsonRESULTS.getString("id");
+                                    String nama_user = jsonRESULTS.getString("name");
+                                    String email_user = jsonRESULTS.getString("email");
+                                    String pict_user = jsonRESULTS.getString("name");
+                                    String token_user = jsonRESULTS.getString("token");
+
+                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_TOKEN, token_user);
+                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_NAMA, nama_user);
+                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_EMAIL, email_user);
+                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_ID,id_user);
+                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_PICT,pict_user);
+
                                     Toast.makeText(mContext, "BERHASIL LOGIN", Toast.LENGTH_SHORT).show();
                                     sharedPrefManager.saveSPBoolean(Preferences.SP_SUDAH_LOGIN, true);
                                     Intent intent = new Intent(mContext, MainActivity.class);

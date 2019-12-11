@@ -19,10 +19,13 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.bumptech.glide.Glide;
+import com.example.booklapangan.ChangePassActivity;
+import com.example.booklapangan.EditProfileActivity;
 import com.example.booklapangan.LoginActivity;
 import com.example.booklapangan.MainActivity;
 import com.example.booklapangan.Preferences;
 import com.example.booklapangan.R;
+import com.example.booklapangan.RegisActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -35,10 +38,12 @@ public class NotificationsFragment extends Fragment implements View.OnClickListe
 //    private NotificationsViewModel notificationsViewModel;
     TextView nama;
     TextView email;
-    TextView id;
     ImageView foto;
+    TextView sapa;
+    ImageView edit;
 
-    Button btnLogout;
+    Button chapass;
+    Button logout;
     Preferences sharedPrefManager;
     GoogleSignInClient mGoogleSignInClient;
 
@@ -54,14 +59,20 @@ public class NotificationsFragment extends Fragment implements View.OnClickListe
 
         mGoogleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
 
-        View myView = inflater.inflate(R.layout.fragment_notifications, container, false);
-        btnLogout = myView.findViewById(R.id.btnLogout);
+        final View myView = inflater.inflate(R.layout.fragment_notifications, container, false);
+        chapass = myView.findViewById(R.id.bt_ChaPass);
+        logout = myView.findViewById(R.id.bt_Logout);
+        edit = myView.findViewById(R.id.to_Edit);
+        sapa = myView.findViewById(R.id.sapa);
         nama = myView.findViewById(R.id.name);
         email = myView.findViewById(R.id.email);
-        id = myView.findViewById(R.id.id);
         foto = myView.findViewById(R.id.photo);
 
-        btnLogout.setOnClickListener(this);
+        logout.setOnClickListener(this);
+
+        edit.setOnClickListener(this);
+
+        chapass.setOnClickListener(this);
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(getActivity());
         if (acct != null) {
@@ -72,10 +83,23 @@ public class NotificationsFragment extends Fragment implements View.OnClickListe
             String personId = acct.getId();
             Uri personPhoto = acct.getPhotoUrl();
 
-            nama.setText("Name: "+personName);
-            email.setText("Email: "+personEmail);
-            id.setText("ID: "+personId);
+            nama.setText(""+personName);
+            email.setText(""+personEmail);
+            if(personName.contains(" ")){
+                personName= personName.substring(0, personName.indexOf(" "));
+                sapa.setText("Hi " +personName+ ", here's your profile");
+            }
             Glide.with(this).load(personPhoto).into(foto);
+        }else{
+            String name_user = sharedPrefManager.getSPNama();
+            nama.setText(name_user);
+            email.setText(sharedPrefManager.getSPEmail());
+            if(name_user.contains(" ")){
+                name_user= name_user.substring(0, name_user.indexOf(" "));
+                sapa.setText("Hi " +name_user+ ", here's your profile");
+            }else{
+                sapa.setText("Hi " +name_user+ ", here's your profile");
+            }
         }
 
         return myView;
@@ -83,17 +107,37 @@ public class NotificationsFragment extends Fragment implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        mGoogleSignInClient.signOut()
-                .addOnCompleteListener(getActivity(), new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(getContext(),"SIGN OUT SUKSES",Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(getActivity(), LoginActivity.class));
-                    }
-                });
+        switch(v.getId()){
+            case R.id.bt_Logout:
+                mGoogleSignInClient.signOut()
+                        .addOnCompleteListener(getActivity(), new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Toast.makeText(getContext(),"SIGN OUT SUKSES",Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(getActivity(), LoginActivity.class));
+                            }
+                        });
 
-        sharedPrefManager.saveSPBoolean(Preferences.SP_SUDAH_LOGIN, false);
-        startActivity(new Intent(getActivity(), LoginActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                sharedPrefManager.saveSPBoolean(Preferences.SP_SUDAH_LOGIN, false);
+                startActivity(new Intent(getActivity(), LoginActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+
+                break;
+
+            case R.id.to_Edit:
+                Intent intentedit = new Intent (getActivity(), EditProfileActivity.class);
+                startActivity(intentedit);
+
+                break;
+
+            case R.id.bt_ChaPass:
+                Intent intentchapass = new Intent (getActivity(), ChangePassActivity.class);
+                startActivity(intentchapass);
+
+                default:
+                    break;
+
+        }
     }
+
 }

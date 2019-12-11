@@ -44,6 +44,11 @@ public class RegisActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        try
+        {
+            this.getSupportActionBar().hide();
+        }
+        catch (NullPointerException e){}
         setContentView(R.layout.activity_regis);
 
         Stetho.initializeWithDefaults(this);
@@ -53,11 +58,11 @@ public class RegisActivity extends AppCompatActivity{
 
         setTitle("Registrasi");
 
-        name = findViewById(R.id.RegisName);
-        email = findViewById(R.id.RegisEmail);
-        password = findViewById(R.id.RegisPass);
-        c_password = findViewById(R.id.RegisCPass);
-        regis = findViewById(R.id.regisBt);
+        name = findViewById(R.id.et_reg_Name);
+        email = findViewById(R.id.et_reg_Email);
+        password = findViewById(R.id.et_reg_Pass);
+        c_password = findViewById(R.id.et_reg_CPass);
+        regis = findViewById(R.id.bt_Regis);
 
         mContext = this;
         mApiService = UtilsApi.getAPIService();
@@ -80,7 +85,6 @@ public class RegisActivity extends AppCompatActivity{
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response){
                         if (response.isSuccessful()){
-                            Log.i("debug", "onResponse: BERHASIL");
                             loading.dismiss();
                             try {
                                 JSONObject jsonRESULTS = new JSONObject(response.body().string());
@@ -99,7 +103,6 @@ public class RegisActivity extends AppCompatActivity{
                             }
                         } else {
                             Toast.makeText(mContext, "GAGAL REGISTRASI", Toast.LENGTH_SHORT).show();
-                            Log.i("debug", "onResponse: GA BERHASIL");
                             loading.dismiss();
                         }
                     }
