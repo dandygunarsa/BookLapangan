@@ -1,5 +1,7 @@
 package com.example.booklapangan.ui.notifications;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,12 +28,23 @@ import com.example.booklapangan.MainActivity;
 import com.example.booklapangan.Preferences;
 import com.example.booklapangan.R;
 import com.example.booklapangan.RegisActivity;
+import com.example.booklapangan.apihelper.BaseApiService;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class NotificationsFragment extends Fragment implements View.OnClickListener {
 
@@ -104,6 +117,8 @@ public class NotificationsFragment extends Fragment implements View.OnClickListe
 
         return myView;
     }
+
+
 
     @Override
     public void onClick(View v) {

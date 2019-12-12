@@ -53,6 +53,10 @@ public class LoginActivity extends AppCompatActivity{
     Preferences sharedPrefManager;
     GoogleSignInClient mGoogleSignInClient;
 
+    String nama_google;
+    String email_google;
+    String pass_google;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -112,6 +116,7 @@ public class LoginActivity extends AppCompatActivity{
         signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                loading = ProgressDialog.show(mContext, null, "Harap Tunggu...", true, false);
                 signIn();
             }
         });
@@ -138,8 +143,14 @@ public class LoginActivity extends AppCompatActivity{
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+
+            nama_google = account.getDisplayName();
+            email_google = account.getEmail();
+            pass_google = account.getEmail();
+
+            requestGoogle();
+
             // Signed in successfully, show authenticated UI.
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
@@ -157,6 +168,49 @@ public class LoginActivity extends AppCompatActivity{
             startActivity(new Intent(LoginActivity.this, MainActivity.class));
         }
         super.onStart();
+    }
+
+    private void requestGoogle() {
+        final String name = nama_google;
+        final String email = email_google;
+        final String password = pass_google;
+
+        mApiService.googleRequest(name, email, password)
+                .enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            loading.dismiss();
+                            try {
+                                JSONObject jsonRESULTS = new JSONObject(response.body().string());
+                                if (jsonRESULTS.getString("status").equals("true")) {
+                                    String token_user = jsonRESULTS.getString("token");
+                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_TOKEN, token_user);
+                                    Toast.makeText(mContext, "SELAMAT! ANDA TERDAFTAR KE MEMBER APP", Toast.LENGTH_LONG).show();
+                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                } else {
+                                    String error_message = jsonRESULTS.getString("error_msg");
+                                    Toast.makeText(mContext, error_message, Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Toast.makeText(mContext, "LOGIN DENGAN AKUN APP AGAR DAPAT MENGAKSES FITUR LENGKAP APLIKASI", Toast.LENGTH_LONG).show();
+                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            loading.dismiss();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Log.e("debug", "onFailure: ERROR > " + t.toString());
+                        loading.dismiss();
+                    }
+                });
+
     }
 
     public void requestLogin(){

@@ -28,7 +28,6 @@ import retrofit2.Response;
 public class EditProfileActivity extends AppCompatActivity {
     
     EditText name;
-    EditText email;
     String id;
     
     Button edit;
@@ -45,7 +44,6 @@ public class EditProfileActivity extends AppCompatActivity {
         setTitle("Edit Profile");
         
         name = findViewById(R.id.et_ed_Name);
-        email = findViewById(R.id.et_ed_Email);
         edit = findViewById(R.id.bt_Edit);
 
         mContext = this;
@@ -53,20 +51,52 @@ public class EditProfileActivity extends AppCompatActivity {
         sharedPrefManager = new Preferences(this);
         
         name.setText(sharedPrefManager.getSPNama());
-        email.setText(sharedPrefManager.getSPEmail());
         id = sharedPrefManager.getSPId();
         
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 loading = ProgressDialog.show(mContext, null, "Harap Tunggu...", true, false);
-                requestEdit();
+                requestAuth();
             }
         });
     }
 
+    private void requestAuth(){
+        final String Authorization = sharedPrefManager.getSPToken();
+        mApiService.authRequest("Bearer " +Authorization)
+                .enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            try {
+                                JSONObject jsonRESULTS = new JSONObject(response.body().string());
+                                if (jsonRESULTS.getString("status").equals("true")) {
+                                    requestEdit();
+                                } else {
+                                    String error_message = jsonRESULTS.getString("error_msg");
+                                    Toast.makeText(mContext, error_message, Toast.LENGTH_SHORT).show();
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Toast.makeText(mContext, "GAGAL VERIFIKASI TOKEN", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Log.e("debug", "onFailure: ERROR > " + t.toString());
+                        loading.dismiss();
+                    }
+                });
+    }
+
     private void requestEdit() {
-        mApiService.editRequest(id, name.getText().toString(), email.getText().toString())
+        mApiService.editRequest(id, name.getText().toString())
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -77,10 +107,8 @@ public class EditProfileActivity extends AppCompatActivity {
                                 if (jsonRESULTS.getString("status").equals("true")) {
 
                                     String nama_edit = jsonRESULTS.getString("name");
-                                    String email_edit = jsonRESULTS.getString("email");
 
                                     sharedPrefManager.saveSPString(sharedPrefManager.SP_NAMA, nama_edit);
-                                    sharedPrefManager.saveSPString(sharedPrefManager.SP_EMAIL, email_edit);
 
                                     Toast.makeText(mContext, "BERHASIL EDIT", Toast.LENGTH_SHORT).show();
 
